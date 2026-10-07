@@ -60,7 +60,7 @@ def dish_details(detail_url):
 
 
 def food2050(path, name, link, rename=None):
-    raw = get(f"https://app.food2050.ch/de/zfv/universitat-zurich,campus-zentrum/{path}/menu/weekly")
+    raw = get(f"https://app.food2050.ch/de/zfv/universitat-zurich,{path}/menu/weekly")
     s = raw.replace('\\"', '"')
     meals, seen = [], set()
     # Split payload into per-day chunks, keep only today's.
@@ -102,9 +102,10 @@ out = {
     "mensas": [
         safe(eth, 9, "ETH Polymensa",
              f"https://ethz.ch/en/campus/erleben/gastronomie-und-einkaufen/gastronomie/menueplaene/offerDay.html?date={TODAY}&id=9"),
-        safe(food2050, "untere-mensa/mittagsverpflegung", "UZH Untere Mensa", "https://www.zfv.ch/de/essen-gehen/untere-mensa-uzh"),
-        safe(food2050, "obere-mensa/lunch", "UZH Obere Mensa", "https://www.zfv.ch/de/essen-gehen/obere-mensa-uzh",
+        safe(food2050, "campus-zentrum/untere-mensa/mittagsverpflegung", "UZH Untere Mensa", "https://www.zfv.ch/de/essen-gehen/untere-mensa-uzh"),
+        safe(food2050, "campus-zentrum/obere-mensa/lunch", "UZH Obere Mensa", "https://www.zfv.ch/de/essen-gehen/obere-mensa-uzh",
              {"MENU 1": "GARDEN", "MENU 2": "PASTA", "MENU 3": "BUTCHER", "MENU 4": "VOLL ANDERS"}),
+        safe(food2050, "platte-14/platte-14/mittagsverpflegung", "UZH Platte 14", "https://www.zfv.ch/de/essen-gehen/platte-14"),
     ],
 }
 with open("data/menu.json", "w", encoding="utf-8") as f:
