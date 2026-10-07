@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>All Mensa</title>
+<style>
+  :root { --bg:#f6f5f2; --card:#fff; --fg:#1d1d1f; --muted:#6b6b70; --line:#e4e2dd; --accent:#1f6f4a; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#141416; --card:#1e1e21; --fg:#ececee; --muted:#9a9aa0; --line:#2e2e33; --accent:#5fc493; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.45 system-ui,-apple-system,sans-serif; }
+  main { max-width:1200px; margin:0 auto; padding:24px 16px; }
+  header { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  h1 { margin:0; font-size:24px; }
+  .meta { color:var(--muted); font-size:13px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; }
+  h2 { margin:0 0 12px; font-size:18px; } h2 a { color:inherit; text-decoration:none; } h2 a:hover { text-decoration:underline; }
+  .meal { padding:10px 0; border-top:1px solid var(--line); }
+  .top { display:flex; justify-content:space-between; gap:8px; }
+  .line { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .name { font-weight:600; } .desc { color:var(--muted); font-size:13px; }
+  .tag { font-size:11px; color:var(--accent); border:1px solid currentColor; border-radius:99px; padding:0 6px; margin-left:4px; }
+  .price { white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .time { margin:14px 0 2px; font-size:13px; font-weight:600; color:var(--accent); }
+  .empty { color:var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <header><h1>All Mensa</h1><span class="meta" id="meta">Loading…</span></header>
+  <div class="grid" id="grid"></div>
+</main>
+<script>
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+fetch("data/menu.json", {cache: "no-store"}).then(r => r.json()).then(d => {
+  const date = new Date(d.date + "T12:00").toLocaleDateString("en-GB", {weekday:"long", day:"numeric", month:"long"});
+  document.getElementById("meta").textContent = `${date} · updated ${d.updated.slice(11)}`;
+  document.getElementById("grid").innerHTML = d.mensas.map(m => {
+    let lastTime = null;
+    const meals = m.meals.map(x => {
+      const head = new Set(m.meals.map(y => y.time)).size > 1 && x.time !== lastTime ? `<div class="time">${esc(x.time)}</div>` : "";
+      lastTime = x.time;
+      return `${head}<div class="meal"><div class="top"><div><div class="line">${esc(x.line)}</div>
+        <span class="name">${esc(x.name)}</span>${x.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+        ${x.price != null ? `<span class="price">${x.price.toFixed(2)}</span>` : ""}</div>
+        <div class="desc">${esc(x.description)}</div></div>`;
+    }).join("");
+    return `<section><h2><a href="${esc(m.link)}" target="_blank" rel="noopener">${esc(m.name)}</a></h2>
+      ${meals || `<p class="empty">${m.error ? "Could not load menu." : "No menu today."}</p>`}</section>`;
+  }).join("");
+}).catch(() => document.getElementById("meta").textContent = "Could not load menu data.");
+</script>
+</body>
+</html>
