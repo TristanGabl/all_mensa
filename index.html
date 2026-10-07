@@ -25,7 +25,6 @@
   .time { margin:14px 0 2px; font-size:13px; font-weight:600; color:var(--accent); }
   .empty { color:var(--muted); }
   .meal.has-img { cursor:pointer; } .meal.has-img:hover .name { text-decoration:underline; }
-  .cam { font-size:12px; color:var(--muted); margin-left:4px; }
   dialog { border:none; border-radius:12px; padding:0; max-width:min(640px,calc(100vw - 32px)); background:var(--card); color:var(--fg); }
   dialog::backdrop { background:rgba(0,0,0,.6); }
   dialog img { display:block; width:100%; max-height:70vh; object-fit:cover; background:var(--line); }
@@ -49,7 +48,7 @@ fetch("data/menu.json", {cache: "no-store"}).then(r => r.json()).then(d => {
       const head = new Set(m.meals.map(y => y.time)).size > 1 && x.time !== lastTime ? `<div class="time">${esc(x.time)}</div>` : "";
       lastTime = x.time;
       return `${head}<div class="meal${x.image ? " has-img" : ""}" data-img="${esc(x.image)}" data-name="${esc(x.name)}"><div class="top"><div><div class="line">${esc(x.line)}</div>
-        <span class="name">${esc(x.name)}</span>${x.image ? '<span class="cam">📷</span>' : ""}${x.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+        <span class="name">${esc(x.name)}</span>${x.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
         ${x.price != null ? `<span class="price">${x.price.toFixed(2)}</span>` : ""}</div>
         <div class="desc">${esc(x.description)}</div></div>`;
     }).join("");
