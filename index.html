@@ -31,6 +31,21 @@
   dialog::backdrop { background:rgba(0,0,0,.6); }
   dialog img { display:block; width:100%; max-height:70vh; object-fit:cover; background:var(--line); }
   dialog p { margin:0; padding:12px 16px; font-weight:600; }
+  #chat-btn { position:fixed; right:16px; bottom:16px; width:56px; height:56px; border-radius:50%; border:none;
+    background:var(--accent); color:#fff; font-size:26px; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.25); z-index:10; }
+  #chat { position:fixed; right:16px; bottom:84px; width:min(340px,calc(100vw - 32px)); max-height:min(480px,calc(100vh - 110px));
+    display:none; flex-direction:column; background:var(--card); border:1px solid var(--line); border-radius:12px;
+    box-shadow:0 8px 30px rgba(0,0,0,.25); z-index:10; overflow:hidden; }
+  #chat.open { display:flex; }
+  #chat header { margin:0; padding:10px 14px; border-bottom:1px solid var(--line); font-weight:600; }
+  #chat-log { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
+  .msg { max-width:85%; padding:8px 11px; border-radius:12px; font-size:14px; }
+  .bot { background:var(--bg); align-self:flex-start; border-bottom-left-radius:4px; }
+  .user { background:var(--accent); color:#fff; align-self:flex-end; border-bottom-right-radius:4px; }
+  .choices { display:flex; flex-wrap:wrap; gap:6px; }
+  .choices button { font:inherit; font-size:13px; padding:5px 10px; border-radius:99px; cursor:pointer;
+    border:1px solid var(--accent); background:transparent; color:var(--accent); }
+  .choices button:hover { background:var(--accent); color:#fff; }
 </style>
 </head>
 <body>
@@ -38,10 +53,14 @@
   <header><h1>All Mensa</h1><span class="meta" id="meta">Loading…</span></header>
   <div class="grid" id="grid"></div>
 </main>
+<button id="chat-btn" aria-label="Open meal advisor">💬</button>
+<div id="chat"><header>Mensa Advisor 🤖</header><div id="chat-log"></div></div>
 <dialog id="dlg"><img id="dlg-img" alt=""><p id="dlg-cap"></p></dialog>
 <script>
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let menu = null;
 fetch("data/menu.json", {cache: "no-store"}).then(r => r.json()).then(d => {
+  menu = d;
   const date = new Date(d.date + "T12:00").toLocaleDateString("en-GB", {weekday:"long", day:"numeric", month:"long"});
   document.getElementById("meta").textContent = `${date} · updated ${d.updated.slice(11, 16)}`;
   document.getElementById("grid").innerHTML = d.mensas.map(m => {
@@ -69,6 +88,43 @@ document.getElementById("grid").addEventListener("click", e => {
   dlg.showModal();
 });
 dlg.addEventListener("click", () => dlg.close());  // click anywhere to close
+
+// Scripted "advisor": asks for mensa and meal, then recommends exactly that.
+const chat = document.getElementById("chat"), log = document.getElementById("chat-log");
+const wait = ms => new Promise(r => setTimeout(r, ms));
+function say(text, who = "bot") {
+  const el = document.createElement("div");
+  el.className = `msg ${who}`; el.textContent = text;
+  log.appendChild(el); log.scrollTop = log.scrollHeight;
+}
+function ask(options) {
+  return new Promise(resolve => {
+    const box = document.createElement("div"); box.className = "choices";
+    options.forEach(([label, value]) => {
+      const b = document.createElement("button"); b.textContent = label;
+      b.onclick = () => { box.remove(); say(label, "user"); resolve(value); };
+      box.appendChild(b);
+    });
+    log.appendChild(box); log.scrollTop = log.scrollHeight;
+  });
+}
+async function converse() {
+  log.innerHTML = "";
+  if (!menu) return say("I'm still reading the menus, try again in a second.");
+  say("Hi! I'm your highly advanced AI meal advisor. 🧠"); await wait(600);
+  say("Which mensa are you going to?");
+  const m = await ask(menu.mensas.filter(x => x.meals.length).map(x => [x.name, x]));
+  await wait(500); say(`Great choice. Which meal at ${m.name} would you like?`);
+  const meal = await ask(m.meals.map(x => [x.name, x]));
+  await wait(500); say("Analysing nutritional data… 🔍"); await wait(1200);
+  say("Cross-referencing 14 million recipes… 📊"); await wait(1200);
+  say(`My recommendation: ${meal.name} at ${m.name}. 🎉`); await wait(700);
+  say("Trust the algorithm.");
+  if (await ask([["Ask again", true]])) converse();
+}
+document.getElementById("chat-btn").addEventListener("click", () => {
+  if (chat.classList.toggle("open") && !log.children.length) converse();
+});
 </script>
 </body>
 </html>
