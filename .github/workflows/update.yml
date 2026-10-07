@@ -2,9 +2,7 @@ name: Update menus and deploy
 
 on:
   schedule:
-    # GitHub cron is UTC-only: fire at both possible UTC hours, the gate below
-    # keeps only the runs at 06:00, 09:00 and 11:00 Zurich time (CET or CEST).
-    - cron: "0 4,5,7,8,9,10 * * *"
+    - cron: "0 4,7,9 * * *"   # UTC: early morning, before & around lunch
   workflow_dispatch:
   push:
     branches: [main]
@@ -19,23 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  gate:
-    runs-on: ubuntu-latest
-    outputs:
-      run: ${{ steps.check.outputs.run }}
-    steps:
-      - id: check
-        run: |
-          h=$(TZ=Europe/Zurich date +%H)
-          if [ "${{ github.event_name }}" != schedule ] || [[ "$h" =~ ^(06|09|11)$ ]]; then
-            echo run=true >> "$GITHUB_OUTPUT"
-          else
-            echo "Zurich hour $h, skipping"
-          fi
-
   deploy:
-    needs: gate
-    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
