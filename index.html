@@ -42,7 +42,7 @@
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 fetch("data/menu.json", {cache: "no-store"}).then(r => r.json()).then(d => {
   const date = new Date(d.date + "T12:00").toLocaleDateString("en-GB", {weekday:"long", day:"numeric", month:"long"});
-  document.getElementById("meta").textContent = `${date} · updated ${d.updated.slice(11)}`;
+  document.getElementById("meta").textContent = `${date} · updated ${d.updated.slice(11, 16)}`;
   document.getElementById("grid").innerHTML = d.mensas.map(m => {
     let lastTime = null;
     const meals = m.meals.map(x => {
