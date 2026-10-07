@@ -25,6 +25,7 @@
   .tag { font-size:11px; color:var(--accent); border:1px solid currentColor; border-radius:99px; padding:0 6px; margin-left:4px; }
   .price { white-space:nowrap; font-variant-numeric:tabular-nums; }
   .time { margin:14px 0 2px; font-size:13px; font-weight:600; color:var(--accent); }
+  summary.time { cursor:pointer; }
   .empty { color:var(--muted); }
   .meal.has-img { cursor:pointer; } .meal.has-img:hover .name { text-decoration:underline; }
   dialog { border:none; border-radius:12px; padding:0; max-width:min(640px,calc(100vw - 32px)); background:var(--card); color:var(--fg); }
@@ -59,22 +60,23 @@
 <script>
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 let menu = null;
+const zurichHour = +new Intl.DateTimeFormat("en-GB", {hour:"numeric", hourCycle:"h23", timeZone:"Europe/Zurich"}).format(new Date());
 fetch("data/menu.json", {cache: "no-store"}).then(r => r.json()).then(d => {
   menu = d;
   const date = new Date(d.date + "T12:00").toLocaleDateString("en-GB", {weekday:"long", day:"numeric", month:"long"});
   document.getElementById("meta").textContent = `${date} · updated ${d.updated.slice(11, 16)}`;
   document.getElementById("grid").innerHTML = d.mensas.map(m => {
-    let lastTime = null;
-    const meals = m.meals.map(x => {
-      const head = new Set(m.meals.map(y => y.time)).size > 1 && x.time !== lastTime ? `<div class="time">${esc(x.time)}</div>` : "";
-      lastTime = x.time;
-      return `${head}<div class="meal${x.image ? " has-img" : ""}" data-img="${esc(x.image)}" data-name="${esc(x.name)}">
+    const meal = x => `<div class="meal${x.image ? " has-img" : ""}" data-img="${esc(x.image)}" data-name="${esc(x.name)}">
         ${x.image ? `<img class="thumb" src="${esc(x.image)}" alt="" loading="lazy">` : `<div class="thumb"></div>`}
         <div class="body"><div class="top"><div><div class="line">${esc(x.line)}</div>
         <span class="name">${esc(x.name)}</span>${x.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
         ${x.price != null ? `<span class="price">${x.price.toFixed(2)}</span>` : ""}</div>
         <div class="desc">${esc(x.description)}</div></div></div>`;
-    }).join("");
+    const times = [...new Set(m.meals.map(x => x.time))];
+    // Dinner starts folded until 14:00 Zurich time; other meal times are always open.
+    const meals = times.length > 1 ? times.map(t => `<details${/dinner|abend/i.test(t) && zurichHour < 14 ? "" : " open"}>
+        <summary class="time">${esc(t)}</summary>${m.meals.filter(x => x.time === t).map(meal).join("")}</details>`).join("")
+      : m.meals.map(meal).join("");
     return `<section><h2><a href="${esc(m.link)}" target="_blank" rel="noopener">${esc(m.name)}</a></h2>
       ${meals || `<p class="empty">${m.error ? "Could not load menu." : "No menu today."}</p>`}</section>`;
   }).join("");
