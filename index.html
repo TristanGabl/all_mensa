@@ -25,6 +25,7 @@
   .tag { font-size:11px; color:var(--accent); border:1px solid currentColor; border-radius:99px; padding:0 6px; margin-left:4px; }
   .price { white-space:nowrap; font-variant-numeric:tabular-nums; }
   .time { margin:14px 0 2px; font-size:13px; font-weight:600; color:var(--accent); }
+  .no-img { display:flex; align-items:center; justify-content:center; text-align:center; padding:8px; box-sizing:border-box; font-size:12px; color:var(--muted); }
   summary.time { cursor:pointer; }
   .empty { color:var(--muted); }
   .meal.has-img { cursor:pointer; } .meal.has-img:hover .name { text-decoration:underline; }
@@ -67,7 +68,7 @@ fetch("data/menu.json", {cache: "no-store"}).then(r => r.json()).then(d => {
   document.getElementById("meta").textContent = `${date} · updated ${d.updated.slice(11, 16)}`;
   document.getElementById("grid").innerHTML = d.mensas.map(m => {
     const meal = x => `<div class="meal${x.image ? " has-img" : ""}" data-img="${esc(x.image)}" data-name="${esc(x.name)}">
-        ${x.image ? `<img class="thumb" src="${esc(x.image)}" alt="" loading="lazy">` : `<div class="thumb"></div>`}
+        ${x.image ? `<img class="thumb" src="${esc(x.image)}" alt="" loading="lazy">` : `<div class="thumb no-img">No photo available</div>`}
         <div class="body"><div class="top"><div><div class="line">${esc(x.line)}</div>
         <span class="name">${esc(x.name)}</span>${x.tags.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
         ${x.price != null ? `<span class="price">${x.price.toFixed(2)}</span>` : ""}</div>
