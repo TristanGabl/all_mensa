@@ -34,6 +34,7 @@ def eth(facility_id, name, link):
                             "description": m.get("description", "").replace(" | ", ", "),
                             "tags": [c["desc"] for c in m.get("meal-class-array", [])],
                             "price": prices.get("stud."),
+                            "image": m["image-url"] + "?client-id=ethz-wcms" if m.get("image-url") else None,
                         })
     # Drop buffet/dessert/bowl lines; within each meal time list VEGAN, GARDEN, HOME first.
     meals = [m for m in meals if not m["line"].lower().startswith(("hot & cold", "dessert", "poly-bowl"))]
@@ -44,16 +45,18 @@ def eth(facility_id, name, link):
     return {"name": name, "link": link, "meals": meals}
 
 
-def student_price(detail_url):
-    """The weekly page has no prices; read the student price from the dish's detail page."""
+def dish_details(detail_url):
+    """The weekly page has no prices/images; read them from the dish's detail page."""
     if not detail_url:
-        return None
+        return None, None
     try:
         s = get(detail_url).replace('\\"', '"')
     except Exception:
-        return None
+        return None, None
     m = re.search(r'"amount":"([\d.]+)","currency":"CHF","priceCategory":\{[^}]*"name":"Studierende"', s)
-    return float(m.group(1)) if m and float(m.group(1)) > 0 else None  # 0.00 = price not set
+    img = re.search(r'"imageUrl":"(https://[^"]+)"', s)
+    price = float(m.group(1)) if m and float(m.group(1)) > 0 else None  # 0.00 = price not set
+    return price, img.group(1) if img else None
 
 
 def food2050(path, name, link, rename=None):
@@ -77,8 +80,9 @@ def food2050(path, name, link, rename=None):
                 continue
             seen.add(key)
             tags = ["Vegan"] if '"isVegan":true' in item else ["Vegetarian"] if '"isVegetarian":true' in item else []
+            price, image = dish_details(url.group(0)[13:] if url else None)
             meals.append({
-                "price": student_price(url.group(0)[13:] if url else None),
+                "price": price, "image": image,
                 "time": "Lunch", "line": (rename or {}).get(key[0].upper(), key[0].upper()), "name": json.loads(f'"{nm.group(1)}"').title(),
                 "description": json.loads(f'"{nm.group(2)}"'), "tags": tags,
             })
