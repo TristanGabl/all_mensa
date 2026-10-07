@@ -44,6 +44,18 @@ def eth(facility_id, name, link):
     return {"name": name, "link": link, "meals": meals}
 
 
+def student_price(detail_url):
+    """The weekly page has no prices; read the student price from the dish's detail page."""
+    if not detail_url:
+        return None
+    try:
+        s = get(detail_url).replace('\\"', '"')
+    except Exception:
+        return None
+    m = re.search(r'"amount":"([\d.]+)","currency":"CHF","priceCategory":\{[^}]*"name":"Studierende"', s)
+    return float(m.group(1)) if m and float(m.group(1)) > 0 else None  # 0.00 = price not set
+
+
 def food2050(path, name, link, rename=None):
     raw = get(f"https://app.food2050.ch/de/zfv/universitat-zurich,campus-zentrum/{path}/menu/weekly")
     s = raw.replace('\\"', '"')
@@ -58,7 +70,7 @@ def food2050(path, name, link, rename=None):
             nm = re.search(r'"name":"((?:[^"\\]|\\.)*)","description":"((?:[^"\\]|\\.)*)"', item)
             if not nm:
                 continue
-            url = re.search(r'"detailUrl":"[^"]*,([^",/]+)/\d{4}-', item)
+            url = re.search(r'"detailUrl":"[^"]*,([^",/]+)/\d{4}-\d{2}-\d{2}', item)
             line = cat.group(1) if cat else url.group(1).replace("-", " ") if url else ""
             key = (line, nm.group(1))
             if key in seen:
@@ -66,8 +78,9 @@ def food2050(path, name, link, rename=None):
             seen.add(key)
             tags = ["Vegan"] if '"isVegan":true' in item else ["Vegetarian"] if '"isVegetarian":true' in item else []
             meals.append({
+                "price": student_price(url.group(0)[13:] if url else None),
                 "time": "Lunch", "line": (rename or {}).get(key[0].upper(), key[0].upper()), "name": json.loads(f'"{nm.group(1)}"').title(),
-                "description": json.loads(f'"{nm.group(2)}"'), "tags": tags, "price": None,
+                "description": json.loads(f'"{nm.group(2)}"'), "tags": tags,
             })
     return {"name": name, "link": link, "meals": meals}
 
