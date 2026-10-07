@@ -35,8 +35,8 @@ def eth(facility_id, name, link):
                             "tags": [c["desc"] for c in m.get("meal-class-array", [])],
                             "price": prices.get("stud."),
                         })
-    # Drop buffet/dessert lines; within each meal time list VEGAN, GARDEN, HOME first.
-    meals = [m for m in meals if not m["line"].lower().startswith(("hot & cold", "dessert"))]
+    # Drop buffet/dessert/bowl lines; within each meal time list VEGAN, GARDEN, HOME first.
+    meals = [m for m in meals if not m["line"].lower().startswith(("hot & cold", "dessert", "poly-bowl"))]
     top = ["VEGAN", "GARDEN", "HOME"]
     rank = lambda m: next((i for i, t in enumerate(top) if m["line"].upper().startswith(t)), len(top))
     times = list(dict.fromkeys(m["time"] for m in meals))
