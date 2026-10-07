@@ -44,7 +44,7 @@ def eth(facility_id, name, link):
     return {"name": name, "link": link, "meals": meals}
 
 
-def food2050(path, name, link):
+def food2050(path, name, link, rename=None):
     raw = get(f"https://app.food2050.ch/de/zfv/universitat-zurich,campus-zentrum/{path}/menu/weekly")
     s = raw.replace('\\"', '"')
     meals, seen = [], set()
@@ -66,7 +66,7 @@ def food2050(path, name, link):
             seen.add(key)
             tags = ["Vegan"] if '"isVegan":true' in item else ["Vegetarian"] if '"isVegetarian":true' in item else []
             meals.append({
-                "time": "Lunch", "line": key[0].upper(), "name": json.loads(f'"{nm.group(1)}"').title(),
+                "time": "Lunch", "line": (rename or {}).get(key[0].upper(), key[0].upper()), "name": json.loads(f'"{nm.group(1)}"').title(),
                 "description": json.loads(f'"{nm.group(2)}"'), "tags": tags, "price": None,
             })
     return {"name": name, "link": link, "meals": meals}
@@ -86,7 +86,8 @@ out = {
         safe(eth, 9, "ETH Polymensa",
              f"https://ethz.ch/en/campus/erleben/gastronomie-und-einkaufen/gastronomie/menueplaene/offerDay.html?date={TODAY}&id=9"),
         safe(food2050, "untere-mensa/mittagsverpflegung", "UZH Untere Mensa", "https://www.zfv.ch/de/essen-gehen/untere-mensa-uzh"),
-        safe(food2050, "obere-mensa/lunch", "UZH Obere Mensa", "https://www.zfv.ch/de/essen-gehen/obere-mensa-uzh"),
+        safe(food2050, "obere-mensa/lunch", "UZH Obere Mensa", "https://www.zfv.ch/de/essen-gehen/obere-mensa-uzh",
+             {"MENU 1": "GARDEN", "MENU 2": "PASTA", "MENU 3": "BUTCHER", "MENU 4": "VOLL ANDERS"}),
     ],
 }
 with open("data/menu.json", "w", encoding="utf-8") as f:
