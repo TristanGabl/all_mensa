@@ -18,7 +18,7 @@ There are no tests or linters.
 
 Pages is static and the source sites block cross-origin requests, so data is scraped server-side at deploy time, not in the browser:
 
-1. `.github/workflows/update.yml` runs on push, manually, and on a UTC cron (`0 4,7,9 * * *`). It runs `scripts/fetch.py`, copies `index.html` + `data/menu.json` into `_site/` and deploys via `actions/deploy-pages`. `data/` and `_site/` are gitignored; the JSON only exists in the deployed artifact.
+1. `.github/workflows/update.yml` runs on push, manually, and on a UTC cron (`43 6-10 * * *`, `17 13 * * *`; Zurich 8:43–12:43 + 15:17 in summer time). It runs `scripts/fetch.py`, copies `index.html` + `data/menu.json` into `_site/` and deploys via `actions/deploy-pages`. `data/` and `_site/` are gitignored; the JSON only exists in the deployed artifact.
 2. `scripts/fetch.py` produces `{date, updated, mensas: [{name, link, meals: [{time, line, name, description, tags, price, image}], error?}]}`. Each source is wrapped in `safe()`, so a broken source yields `meals: []` + `error` instead of failing the deploy.
 3. `index.html` is self-contained (inline CSS/JS): renders cards from `data/menu.json`, a photo popup (`<dialog>`) on meal click, and a scripted joke "advisor" chatbot (asks mensa, then meal, then "recommends" exactly that choice).
 
