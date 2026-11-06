@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A GitHub Pages site (https://tristangabl.github.io/all_mensa/) showing today's menus for ETH Polymensa, UZH Untere Mensa, UZH Obere Mensa and UZH Platte 14. No build step, no dependencies beyond the Python stdlib.
 
+## Working rule
+
+After every change, commit and push to `main` without asking (that deploys via Pages), then check `gh run list -L1`.
+
 ## Commands
 
 - Fetch menus locally: `python3 scripts/fetch.py` (writes `data/menu.json`, prints meal count / error per mensa)
